@@ -18,6 +18,7 @@ pub struct GameState {
     pub checked_flag: bool,
     pub checked_player: Color,
     pub debug_flag: bool,
+    pub castling_flag: bool,
     pub wkc: usize,
     pub bkc: usize,
     pub old_wkc: usize,
@@ -50,6 +51,7 @@ impl GameState {
             checked_flag: false,
             checked_player: UNCOLORED,
             debug_flag: false,
+            castling_flag: false,
             wkc: 4,
             bkc: 60,
             old_wkc: 4,
@@ -413,7 +415,7 @@ impl GameState {
 /// Returns:
 /// 
 /// A boolean value.
-    pub fn move_validity_checker(&self, piece_coord: &str, target_coord: &str) -> bool {
+    pub fn move_validity_checker(&mut self, piece_coord: &str, target_coord: &str) -> bool {
         self.debug_print("Move checker entered");
 
         let valid_move: bool;
@@ -602,7 +604,7 @@ impl GameState {
 /// Returns:
 /// 
 /// A boolean value that is true if the move is valid, false if not.
-    fn king_move_checker(&self, piece: ChessPiece, pc: usize, tc: usize) -> bool {
+    fn king_move_checker(&mut self, piece: ChessPiece, pc: usize, tc: usize) -> bool {
         self.debug_print("king_checker entered");
 
         match piece.piecetype {
@@ -1050,7 +1052,7 @@ impl GameState {
 /// Arguments:
 /// 
 /// * `pc`: The piece's current location.
-    pub fn get_moves_from_tile(&self, pc: usize) -> Vec<usize> {
+    pub fn get_moves_from_tile(&mut self, pc: usize) -> Vec<usize> {
         let pc_string = GameState::coordinate_translator_usize(pc);
         let pcs = pc_string.as_str();
         let mut v: Vec<usize> = Vec::new();
@@ -1079,7 +1081,7 @@ impl GameState {
 /// Returns:
 /// 
 /// A vector of all the possible moves that can be made to a certain tile.
-    pub fn get_moves_to_tile(&self, tile: usize) -> Vec<usize> {
+    pub fn get_moves_to_tile(&mut self, tile: usize) -> Vec<usize> {
         let tile_string = GameState::coordinate_translator_usize(tile);
         let tile_str = tile_string.as_str();
         let mut v: Vec<usize> = Vec::new();
@@ -1104,7 +1106,7 @@ impl GameState {
 /// Returns:
 /// 
 /// A vector of usize
-    pub fn get_color_moves_to_tile(&self, tile: usize, color: Color) -> Vec<usize> {
+    pub fn get_color_moves_to_tile(&mut self, tile: usize, color: Color) -> Vec<usize> {
         let tile_string = GameState::coordinate_translator_usize(tile);
         let tile_str = tile_string.as_str();
         let mut v: Vec<usize> = Vec::new();
@@ -1133,7 +1135,7 @@ impl GameState {
 /// Returns:
 /// 
 /// A string of all the possible moves from a given tile.
-    pub fn get_moves_from_tile_as_string(&self, pc: usize) -> String {
+    pub fn get_moves_from_tile_as_string(&mut self, pc: usize) -> String {
         let pc_string = GameState::coordinate_translator_usize(pc);
         let pcs = pc_string.as_str();
         let mut v: Vec<String> = Vec::new();
@@ -1206,6 +1208,10 @@ impl GameState {
                 self.wkc = self.old_wkc;
                 self.bkc = self.old_bkc;
                 self.debug_print("Reverting!!! Was checked, is still checked");
+                if self.castling_flag {
+                    self.debug_print("Invalid castling move????");
+                    self.castling_flag = false;
+                }
             } else {
                 self.debug_print("Next player!");
                 self.next_player();
@@ -1229,6 +1235,26 @@ impl GameState {
                 _ => {
                     //Do nothing
                 }
+            }
+            if self.castling_flag {
+                if pc_usize + 2 == tc_usize {
+                    if let Some( mut rook) = self.board[pc_usize + 3] {
+                        rook.piecetype = PieceType::ROOK(true);
+                        self.board[pc_usize + 3] = None;
+                        self.board[pc_usize + 1] = Some(rook);
+                    } else {
+                        panic!("This move should have been valid!");
+                    }
+                } else if pc_usize - 2 == tc_usize {
+                    if let Some(mut rook) = self.board[pc_usize - 4] {
+                        rook.piecetype = PieceType::ROOK(true);
+                        self.board[pc_usize - 4] = None;
+                        self.board[pc_usize - 1] = Some(rook);
+                    } else {
+                        panic!("This move should have been valid!");
+                    }
+                }
+                self.castling_flag = false;
             }
         } else {
             panic!("This should have been a valid move!");
@@ -1302,9 +1328,8 @@ pub fn checked_checker(&mut self) {
 /// Returns:
 /// 
 /// A bool that is true if the move is valid and false if it is not.
-pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
+pub fn castling_check(&mut self, pc: usize, tc: usize) -> bool {
     self.debug_print("Castling check entered...");
-    let mut ret = false;
     if let Some(piece) = self.board[pc] {
         let piece_color = piece.get_color_as_bool();
         if self.checked_flag {
@@ -1338,13 +1363,12 @@ pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
                         return false;
                     }
                 }
-                let current_checked_flag = self.checked_flag;
-                let current_checked_player = self.checked_player;
                 for i in 1..3 {
                     match self.board[pc + i] {
                         Some(piece) => {
                             self.debug_print("There seems to be a piece in the way at: ");
                             self.debug_print(pc + i);
+                            self.debug_print(piece);
                             return false;
                         }
                         None => {
@@ -1362,8 +1386,15 @@ pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
             }
         } else if tc == pc - 2 {
             self.debug_print("Castling to the left");
-            if let Some(rook) = self.board[tc -1] {
-                match (rook.piecetype, rook.color) {
+            self.debug_print("Tc: ");
+            self.debug_print(tc);
+            self.debug_print(tc as isize - 2);
+            if tc as isize - 2 < 0 {
+                self.debug_print("Tc is less than 0");
+                return false;
+            }
+            if let Some(rook) = self.board[(tc as isize - 2) as usize] {
+                match (rook.piecetype, rook.get_color_as_bool()) {
                     (PieceType::ROOK(false), piece_color) => {
                         //Seems correct!
                         self.debug_print("Piece is a rook of correct color and hasnt moved");
@@ -1373,8 +1404,6 @@ pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
                         return false;
                     }
                 }
-                let current_checked_flag = self.checked_flag;
-                let current_checked_player = self.checked_player;
                 for i in 1..3 {
                     match self.board[pc - i] {
                         Some(piece) => {
@@ -1399,9 +1428,12 @@ pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
             self.debug_print("Castling to the wrong side!");
             return false;
         }
+        self.castling_flag = true;
+        self.debug_print("Castling check left...");
+        return true;
     }
     self.debug_print("Castling check left...");
-    return true;
+    return false;
 }
 
 /// "Return the index of the white king, or 64 if there is no white king."
