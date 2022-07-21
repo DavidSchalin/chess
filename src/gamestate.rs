@@ -1070,6 +1070,15 @@ impl GameState {
         v
     }
 
+/// It takes a tile number and returns a vector of all the pieces that can move to that tile
+/// 
+/// Arguments:
+/// 
+/// * `tile`: The tile you want to move to.
+/// 
+/// Returns:
+/// 
+/// A vector of all the possible moves that can be made to a certain tile.
     pub fn get_moves_to_tile(&self, tile: usize) -> Vec<usize> {
         let tile_string = GameState::coordinate_translator_usize(tile);
         let tile_str = tile_string.as_str();
@@ -1084,6 +1093,17 @@ impl GameState {
         v
     }
 
+/// It takes a tile and a color, and returns a vector of all the pieces of that color that can move to
+/// that tile
+/// 
+/// Arguments:
+/// 
+/// * `tile`: The tile you want to check if a piece can move to.
+/// * `color`: Color - The color of the piece you want to move.
+/// 
+/// Returns:
+/// 
+/// A vector of usize
     pub fn get_color_moves_to_tile(&self, tile: usize, color: Color) -> Vec<usize> {
         let tile_string = GameState::coordinate_translator_usize(tile);
         let tile_str = tile_string.as_str();
@@ -1215,7 +1235,8 @@ impl GameState {
         }
     }
 
-// A function to check if a player has ben checked
+/// For each piece on the board, check if the piece's moveset contains the king's position. If it does,
+/// set the checked flag to true and break
 pub fn checked_checker(&mut self) {
     self.debug_print("Checked checker entered...");
 
@@ -1269,6 +1290,18 @@ pub fn checked_checker(&mut self) {
     self.debug_print("Checked checker left...");
 }
 
+/// If the king is not checked, and the king has not moved, and the king is not moving to a tile that is
+/// checked, and the king is not moving to a tile that is checked along the way, and the king is moving
+/// to the correct tile, and the rook is of the correct color and has not moved, then the move is valid
+/// 
+/// Arguments:
+/// 
+/// * `pc`: The position of the piece
+/// * `tc`: Target coordinate
+/// 
+/// Returns:
+/// 
+/// A bool that is true if the move is valid and false if it is not.
 pub fn castling_check(&self, pc: usize, tc: usize) -> bool {
     self.debug_print("Castling check entered...");
     let mut ret = false;
