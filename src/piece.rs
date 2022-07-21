@@ -19,6 +19,29 @@ pub enum Color {
     UNCOLORED
 }
 
+impl Color {
+    // Create a function that matches the color to a bool.
+    pub fn match_color_as_bool(&self) -> bool {
+        match self {
+            Color::WHITE => true,
+            Color::BLACK => false,
+            Color::UNCOLORED => {
+                panic!("Color is not colored!");
+            }
+        }
+    }
+
+    pub fn match_bool_as_color(b: bool) -> Color {
+        match b {
+            true => Color::WHITE,
+            false => Color::BLACK,
+            _ => {
+                panic!("Color is not colored!");
+            }
+        }
+    }
+}
+
 /// A ChessPiece is a struct that contains a PieceType and a Color.
 /// 
 /// Properties:
