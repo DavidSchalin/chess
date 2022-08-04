@@ -8,7 +8,7 @@ const WHITE: Color = Color::WHITE;
 const BLACK: Color = Color::BLACK;
 const UNCOLORED: Color = Color::UNCOLORED;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct GameState {
     #[serde(with = "BigArray")]
     pub board: [Option<ChessPiece>; 64],
@@ -58,6 +58,69 @@ impl GameState {
             old_bkc: 60
         }
     }
+
+pub fn new_custom(&mut self, arg: &str) {
+    let chars = arg.chars();
+    let mut board: [Option<ChessPiece>; 64] = [None; 64];
+    let mut i = 0;
+    let mut wkc = 64;
+    let mut bkc = 64;
+    let mut current_player: Color = Color::WHITE;
+    for c in chars {
+        if i < 64 {
+            let piece = match c {
+                'p' => Some(ChessPiece::new(PieceType::PAWN(false), WHITE)),
+                'P' => Some(ChessPiece::new(PieceType::PAWN(false), BLACK)),
+                'r' => Some(ChessPiece::new(PieceType::ROOK(false), WHITE)),
+                'R' => Some(ChessPiece::new(PieceType::ROOK(false), BLACK)),
+                'n' => Some(ChessPiece::new(PieceType::KNIGHT, WHITE)),
+                'N' => Some(ChessPiece::new(PieceType::KNIGHT, BLACK)),
+                'b' => Some(ChessPiece::new(PieceType::BISHOP, WHITE)),
+                'B' => Some(ChessPiece::new(PieceType::BISHOP, BLACK)),
+                'q' => Some(ChessPiece::new(PieceType::QUEEN, WHITE)),
+                'Q' => Some(ChessPiece::new(PieceType::QUEEN, BLACK)),
+                'k' => Some(ChessPiece::new(PieceType::KING(false), WHITE)),
+                'K' => Some(ChessPiece::new(PieceType::KING(false), BLACK)),
+                _ => None
+            };
+            if piece.is_some() {
+                board[i] = piece;
+            }
+            match piece {
+                    Some(p) => {
+                        match (p.piecetype, p.color) {
+                            (PieceType::KING(false), Color::WHITE) => {
+                                wkc = i;
+                            },
+                            (PieceType::KING(false), Color::BLACK) => {
+                                bkc = i;
+                            },
+                            _ => {}
+                        }
+                    },
+                    None => {}
+            }
+        } else {
+            match c {
+                'w' => current_player = WHITE,
+                'b' => current_player = BLACK,
+                _ => println!("Invalid character in custom board string: '{}'", c)
+            }
+        }
+        i += 1;
+    }
+    self.board = board;
+    self.prev_board = board;
+    self.current_player = current_player;
+    self.checked_flag = false;
+    self.checked_player = UNCOLORED;
+    self.debug_flag = true;
+    self.castling_flag = false;
+    self.wkc = wkc;
+    self.bkc = bkc;
+    self.old_wkc = wkc;
+    self.old_bkc = bkc;
+}
 
 /// `serialize_me` takes a mutable reference to `self` and returns nothing
     pub fn serialize_me(&mut self) ->  String {

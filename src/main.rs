@@ -26,7 +26,12 @@ fn play(){
     loop {
         //gamestate.print_me();
         gamestate.print_unicode();
-        player_move(&mut gamestate);
+        if let gamestate = player_command(&mut gamestate) {
+            //Continue
+        } else {
+            println!("Something went wrong! Could not create new gamestate");
+            break;
+        }
     }
 }
 
@@ -36,7 +41,7 @@ fn play(){
 /// ### Returns 
 /// a tuple (bool, usize, usize) representing (validity, start index of move, target index of move)
 ///
-fn player_move(gamestate: &mut GameState) -> Option<(usize, usize)> {
+fn player_command(gamestate: &mut GameState) -> Option<usize> {
 
     let mut command: bool = false;
     let turn = match gamestate.current_player {
@@ -73,14 +78,22 @@ fn player_move(gamestate: &mut GameState) -> Option<(usize, usize)> {
             println!("done!");
             line = String::new();
             command = true;
-        }  else if line == "black\n"{
+        } else if line == "black\n"{
             println!("swapping to black...");
             gamestate.current_player = BLACK;
             command = true;
-        }   else if line == "white\n" {
+        } else if line == "white\n" {
             println!("swapping to white...");
             gamestate.current_player = WHITE;
             command = true;
+        } else if line == "new_game_custom\n" {
+            println!("Enter a specific game state: ");
+            line = String::new();
+            std::io::stdin().read_line(&mut line).unwrap();
+            let arg: &str = line.strip_suffix('\n')?;
+            println!("argument given: '{}'", arg);
+            gamestate.new_custom(arg);
+            return Some(0);
         }
     }
 
@@ -111,5 +124,6 @@ fn player_move(gamestate: &mut GameState) -> Option<(usize, usize)> {
         }
     }
 
-    Some((0, 0))
+    Some(0)
+
 }
