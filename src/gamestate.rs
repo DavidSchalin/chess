@@ -144,8 +144,7 @@ pub fn new_custom(&mut self, arg: &str) {
     pub fn bool_to_color(b: bool) -> Color {
         return match b {
             true => WHITE,
-            false => BLACK,
-            _ => UNCOLORED
+            false => BLACK
         };
     }
 
@@ -763,7 +762,7 @@ pub fn new_custom(&mut self, arg: &str) {
         };
 
         let color_bool = piece.get_color_as_bool();
-        let mut returner;
+        let returner;
 
         let diff_x = (GameState::coord_x(pc) as isize - GameState::coord_x(tc) as isize).abs();
         let diff_y = (GameState::coord_y(pc) as isize - GameState::coord_y(tc) as isize).abs();
@@ -921,16 +920,16 @@ pub fn new_custom(&mut self, arg: &str) {
         let is_queen: bool = piece.piecetype == PieceType::QUEEN;
 
         if !is_queen {
-            let has_moved: bool = match piece.piecetype {
-                PieceType::ROOK(true) => true,
-                PieceType::ROOK(false) => false,
-                _ => panic!("Something went wrong (Not a Rook?)")
-            };
+            // let has_moved: bool = match piece.piecetype {
+            //     PieceType::ROOK(true) => true,
+            //     PieceType::ROOK(false) => false,
+            //     _ => panic!("Something went wrong (Not a Rook?)")
+            // };
         }
 
         let color_bool = piece.get_color_as_bool();
 
-        let mut returner: bool;
+        let returner: bool;
 
         let diff_x = GameState::diff_x(pc, tc);
         let diff_y = GameState::diff_y(pc, tc);
@@ -1021,7 +1020,7 @@ pub fn new_custom(&mut self, arg: &str) {
         self.debug_print("Bishop Move Checker Entered");
 
         let color_bool = piece.get_color_as_bool();
-        let mut returner: bool = false;
+        let returner: bool;
 
         let diff_x = GameState::diff_x(pc, tc);
         let diff_y = GameState::diff_y(pc, tc);
@@ -1095,7 +1094,6 @@ pub fn new_custom(&mut self, arg: &str) {
             panic!("Something went wrong (Not a Queen?)");
         }
 
-        let color_bool = piece.get_color_as_bool();
         let mut returner: bool = false;
 
         //Check if the move is that of a bishop or rook
@@ -1469,7 +1467,7 @@ pub fn castling_check(&mut self, pc: usize, tc: usize) -> bool {
                 }
                 for i in 1..3 {
                     match self.board[pc - i] {
-                        Some(piece) => {
+                        Some(_) => {
                             self.debug_print("There seems to be a piece in the way at: ");
                             self.debug_print(pc - i);
                             return false;
